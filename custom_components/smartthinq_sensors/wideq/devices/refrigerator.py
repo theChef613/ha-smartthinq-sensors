@@ -396,7 +396,6 @@ class RefrigeratorStatus(DeviceStatus):
         super().__init__(device, data)
         self._temp_unit = None
         self._eco_friendly_state = None
-        self._sabbath_state = None
 
     def _get_eco_friendly_state(self):
         """Get current eco-friendly state."""
@@ -410,13 +409,10 @@ class RefrigeratorStatus(DeviceStatus):
 
     def _get_sabbath_state(self):
         """Get current sabbath-mode state."""
-        if self._sabbath_state is None:
-            state = self.lookup_enum(["Sabbath", "sabbathMode"])
-            if not state:
-                self._sabbath_state = ""
-            else:
-                self._sabbath_state = state
-        return self._sabbath_state
+        # Deliberately not cached: the value must track the latest poll.
+        # A stale cache keeps the switch showing off, and the switch's
+        # turn_off guard (if self.is_on) then skips sending the command.
+        return self.lookup_enum(["Sabbath", "sabbathMode"]) or ""
 
     def _get_default_index(self, key_mode, key_index):
         """Get default model info index key."""
