@@ -14,6 +14,7 @@ from homeassistant.components.switch import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -274,7 +275,14 @@ class LGESwitch(LGEBaseSwitch):
         if self.entity_description.turn_off_fn is None:
             raise NotImplementedError()
         if self.is_on:
-            await self.entity_description.turn_off_fn(self._wrap_device)
+            try:
+                await self.entity_description.turn_off_fn(self._wrap_device)
+            except HomeAssistantError:
+                raise
+            except Exception as err:
+                raise HomeAssistantError(
+                    f"Failed to turn off {self.name}: {err}"
+                ) from err
             self._api.async_set_updated()
 
     async def async_turn_on(self, **kwargs):
@@ -282,7 +290,14 @@ class LGESwitch(LGEBaseSwitch):
         if self.entity_description.turn_on_fn is None:
             raise NotImplementedError()
         if not self.is_on:
-            await self.entity_description.turn_on_fn(self._wrap_device)
+            try:
+                await self.entity_description.turn_on_fn(self._wrap_device)
+            except HomeAssistantError:
+                raise
+            except Exception as err:
+                raise HomeAssistantError(
+                    f"Failed to turn on {self.name}: {err}"
+                ) from err
             self._api.async_set_updated()
 
     def _get_switch_state(self):
