@@ -167,6 +167,13 @@ def _switch_exist(
         return True
 
     feature = switch_desc.key
+    # The Sabbath-mode switch is always created for refrigerators. The LG
+    # API intermittently omits the Sabbath field from device snapshots, and
+    # gating on available_features made the switch disappear on every
+    # integration reload that caught a partial snapshot.
+    if feature == RefrigeratorFeatures.SABBATH:
+        return lge_device.type == DeviceType.REFRIGERATOR
+
     if feature in lge_device.available_features:
         return True
 
